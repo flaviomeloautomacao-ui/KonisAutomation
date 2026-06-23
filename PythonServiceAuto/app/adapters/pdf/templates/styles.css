@@ -1,0 +1,1090 @@
+/* ==========================================================================
+   styles.css — Estilos do relatório técnico (PDF via WeasyPrint)
+   ==========================================================================
+   Controla 100% da aparência visual do relatório PDF.
+   Inclui: logo no cabeçalho, tabelas de risco coloridas, matriz 5×5,
+   recomendações, controle de revisões, etc.
+   ========================================================================== */
+
+/* ---------- Reset & Base ---------- */
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* ---------- Running Header (logo em todas as páginas) ---------- */
+
+.running-header {
+    position: running(pageHeader);
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1.5px solid #0f3460;
+    padding-bottom: 4px;
+}
+
+.running-header img {
+    height: 38px;
+    width: auto;
+}
+
+.running-header-title {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 7pt;
+    color: #0f3460;
+    text-align: center;
+    flex: 1;
+}
+
+.running-header-rev {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 7pt;
+    color: #0f3460;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.running-header-page {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 8pt;
+    color: #0f3460;
+    text-align: right;
+    white-space: nowrap;
+    margin-left: 12px;
+}
+
+.running-header-page::after {
+    content: "Pág. " counter(page) " / " counter(pages);
+}
+
+.running-footer {
+    position: running(pageFooter);
+    width: 100%;
+    border-top: 0.8px solid #0f3460;
+    padding-top: 3px;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 7pt;
+    line-height: 1.25;
+    color: #0f3460;
+    text-align: center;
+}
+
+.running-footer strong {
+    color: #0f3460;
+}
+
+
+/* ---------- Page Setup ---------- */
+
+@page {
+    size: A4;
+    margin: 24mm 20mm 25mm 25mm;
+
+    @top-left {
+        content: element(pageHeader);
+        width: 100%;
+    }
+
+    @bottom-center {
+        content: element(pageFooter);
+        width: 100%;
+    }
+
+}
+
+/* Primeira página (capa): sem cabeçalho, com rodapé institucional */
+@page :first {
+    margin: 12mm 20mm 25mm 20mm;
+    @top-left     { content: none; }
+    @bottom-center { content: element(pageFooter); }
+}
+
+/* Página do Anexo em paisagem */
+@page landscape {
+    size: A4 landscape;
+    margin: 20mm 15mm 20mm 15mm;
+
+    @top-left {
+        content: element(pageHeader);
+        width: 100%;
+    }
+
+    @bottom-center {
+        content: element(pageFooter);
+        width: 100%;
+    }
+}
+
+
+/* ---------- Typography ---------- */
+
+body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 10pt;
+    line-height: 1.55;
+    color: #0f3460;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #0f3460;
+    margin-top: 0.8em;
+    margin-bottom: 0.4em;
+    line-height: 1.25;
+}
+
+h1 { font-size: 22pt; }
+h2 { font-size: 14pt; margin-top: 2em; }
+h3 { font-size: 12pt; margin-top: 1.5em; }
+h4 { font-size: 10.5pt; margin-top: 1.1em; color: #0f3460; }
+h5, h6 { margin-top: 0.9em; }
+
+p {
+    margin-bottom: 0.6em;
+    text-align: justify;
+    text-indent: 1.25cm;
+}
+
+/* Sem recuo em contextos onde não faz sentido */
+table p,
+.cover p,
+.toc p,
+.revision-control p,
+.risk-distribution p,
+.equipment-info-table p,
+.encerramento-quote p,
+li p,
+p.text-muted,
+p.text-center,
+p.text-right,
+p.summary-count,
+p.encerramento-city,
+p.contact-name,
+p.contact-role,
+p.contact-phone,
+p.contact-link,
+p.contact-registro {
+    text-indent: 0;
+}
+
+strong { color: #0f3460; }
+
+
+/* ==========================================================================
+   CAPA — Primeira página do relatório
+   ========================================================================== */
+
+.cover {
+    page-break-after: always;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    min-height: 100%;
+    text-align: center;
+    padding: 0;
+}
+
+/* Logo no canto superior esquerdo da capa */
+.cover-logo-topleft {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.cover-logo-topleft img {
+    height: 42px;
+    width: auto;
+}
+
+.cover-content {
+    width: 100%;
+    max-width: 540px;
+    margin-top: 3.5em;
+}
+
+.cover-title {
+    font-size: 32pt;
+    color: #0f3460;
+    margin-bottom: 0.15em;
+    line-height: 1.15;
+    letter-spacing: 0.5px;
+    font-weight: 800;
+}
+
+.cover-subtitle-main {
+    font-size: 20pt;
+    color: #0f3460;
+    font-weight: 600;
+    font-style: italic;
+    margin-bottom: 0.3em;
+}
+
+.cover-subtitle {
+    font-size: 13pt;
+    color: #0f3460;
+    font-weight: 400;
+    margin-bottom: 0.5em;
+}
+
+.cover-doc-code {
+    font-size: 11pt;
+    color: #0f3460;
+    font-weight: 700;
+    margin-bottom: 1em;
+    letter-spacing: 0.5px;
+}
+
+.cover-table {
+    width: 100%;
+    text-align: left;
+    border-collapse: collapse;
+    margin: 0.8em 0;
+    font-size: 12pt;
+}
+
+.cover-table td {
+    padding: 5px 8px;
+    vertical-align: top;
+    border: none;
+}
+
+.cover-label {
+    font-weight: 700;
+    color: #0f3460;
+    white-space: nowrap;
+    width: 38%;
+}
+
+.cover-value-bold {
+    font-weight: 700;
+    color: #0f3460;
+}
+
+/* ---------- Imagem de Capa (Feature 1) ---------- */
+
+.cover-image {
+    width: 100%;
+    text-align: center;
+    margin: 16px 0;
+}
+
+.cover-image img {
+    max-width: 90%;
+    max-height: 340px;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+
+/* ==========================================================================
+   CONTROLE DE REVISÃO DO DOCUMENTO (Feature 2)
+   ========================================================================== */
+
+.revision-control {
+    page-break-before: always;
+    page-break-after: always;
+}
+
+.revision-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9pt;
+    margin-top: 1em;
+}
+
+.revision-table th {
+    background-color: #0f3460;
+    color: #fff;
+    padding: 6px 8px;
+    text-align: left;
+    font-weight: 600;
+}
+
+.revision-table td {
+    padding: 5px 8px;
+    border-bottom: 1px solid #ddd;
+    vertical-align: top;
+}
+
+/* Linhas vazias para preenchimento manual */
+.revision-table td.revision-empty {
+    height: 28px;
+    border-bottom: 1px solid #ccc;
+}
+
+.revision-table tr:nth-child(even) td {
+    background-color: #f8f9fa;
+}
+
+
+/* ==========================================================================
+   APRESENTAÇÃO TÉCNICA E IMPORTÂNCIA DOS SERVIÇOS
+   ========================================================================== */
+
+.apresentacao-section {
+    page-break-after: always;
+}
+
+.apresentacao-section > h2:first-of-type {
+    margin-top: 0;
+    margin-bottom: 1em;
+}
+
+.apresentacao-h3 {
+    font-size: 11pt;
+    color: #0f3460;
+    margin-top: 1.2em;
+    margin-bottom: 0.4em;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.apresentacao-h4 {
+    font-size: 10pt;
+    color: #0f3460;
+    margin-top: 0.9em;
+    margin-bottom: 0.3em;
+    font-weight: 700;
+}
+
+.apresentacao-h5 {
+    font-size: 9.5pt;
+    color: #0f3460;
+    margin-top: 0.7em;
+    margin-bottom: 0.25em;
+    font-weight: 600;
+    font-style: italic;
+}
+
+
+/* ==========================================================================
+   MATRIZ DE RISCO 3×3 (Apresentação Técnica)
+   ========================================================================== */
+
+table.risk-matrix-3x3 {
+    border-collapse: collapse;
+    margin: 1em auto;
+    font-size: 9pt;
+    text-align: center;
+    width: 80%;
+}
+
+.risk-matrix-3x3 th,
+.risk-matrix-3x3 td {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    min-width: 80px;
+    vertical-align: middle;
+}
+
+.risk-matrix-3x3 thead th {
+    background-color: #0f3460;
+    color: #fff;
+    font-weight: 600;
+    font-size: 9pt;
+}
+
+.risk-matrix-3x3 tbody th {
+    background-color: #e8edf5;
+    font-weight: 600;
+    color: #0f3460;
+    text-align: right;
+    padding-right: 12px;
+    white-space: nowrap;
+}
+
+/* Cores dos níveis de risco 3×3 */
+.risk-3x3-baixo { background-color: #28a745; color: #fff; font-weight: 700; }
+.risk-3x3-medio { background-color: #ffc107; color: #333; font-weight: 700; }
+.risk-3x3-alto  { background-color: #dc3545; color: #fff; font-weight: 700; }
+
+
+/* ==========================================================================
+   SUMÁRIO (Table of Contents)
+   ========================================================================== */
+
+.toc {
+    page-break-after: always;
+}
+
+.toc-title {
+    text-align: center;
+    border-bottom: none;
+    margin-top: 0;
+    margin-bottom: 1em;
+    font-size: 16pt;
+    letter-spacing: 1px;
+}
+
+/* Títulos de abertura de seção (primeiros elementos de sua página) não herdam margin-top grande */
+.revision-control h2,
+.cover h2 {
+    margin-top: 0;
+}
+
+.toc-list {
+    list-style: none;
+    padding: 0;
+}
+
+.toc-list > li {
+    padding: 5px 0;
+    border-bottom: 1px dotted #ccc;
+    font-size: 10pt;
+    font-weight: 600;
+    color: #0f3460;
+}
+
+.toc-list > li.toc-sub {
+    padding-left: 2em;
+    font-weight: 400;
+    font-size: 9.5pt;
+    color: #0f3460;
+}
+
+.toc-number {
+    display: inline-block;
+    width: 3em;
+    font-weight: 700;
+    color: #0f3460;
+}
+
+.toc-link {
+    display: flex;
+    text-decoration: none;
+    color: inherit;
+    font-weight: inherit;
+    width: 100%;
+}
+
+.toc-link::after {
+    content: target-counter(attr(href url), page);
+    margin-left: auto;
+    padding-left: 8px;
+    flex-shrink: 0;
+    font-weight: 400;
+    color: #0f3460;
+}
+
+
+/* ==========================================================================
+   SEÇÕES DE CONTEÚDO
+   ========================================================================== */
+
+.section {
+    page-break-before: auto;
+}
+
+.section-number {
+    color: #0f3460;
+    margin-right: 0.3em;
+    font-weight: 700;
+}
+
+/* Conteúdo gerado pelo LLM */
+.llm-content {
+    margin: 0.5em 0;
+}
+
+.llm-content p {
+    margin-bottom: 0.6em;
+}
+
+.llm-content ul, .llm-content ol {
+    margin: 0.4em 0 0.4em 1.5em;
+}
+
+.llm-content li {
+    margin-bottom: 0.25em;
+}
+
+/* Listas de texto */
+.text-list {
+    list-style: disc;
+    margin: 0.4em 0 0.6em 1.5em;
+}
+
+.text-list li {
+    margin-bottom: 0.2em;
+}
+
+
+/* ==========================================================================
+   RESULTADO ESPERADO (Feature 4)
+   ========================================================================== */
+
+.resultado-esperado {
+    page-break-before: always;
+}
+
+.resultado-esperado .section-content p {
+    text-align: justify;
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+
+
+/* ==========================================================================
+   TABELAS DE CRITÉRIOS (Metodologia) — Severidade, Probabilidade
+   ========================================================================== */
+
+table.criteria-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.8em 0;
+    font-size: 9.5pt;
+}
+
+.criteria-table thead {
+    background-color: #0f3460;
+    color: #fff;
+}
+
+.criteria-table thead th {
+    padding: 5px 8px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 9pt;
+}
+
+.criteria-table tbody td {
+    padding: 4px 8px;
+    border-bottom: 1px solid #ddd;
+    vertical-align: top;
+}
+
+.criteria-table tbody tr:nth-child(even) {
+    background-color: #f7f8fa;
+}
+
+/* Célula colorida de nível */
+.criteria-table .level-cell {
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+    padding: 4px 10px;
+    border-radius: 2px;
+}
+
+
+/* ==========================================================================
+   MATRIZ DE RISCO 5×5
+   ========================================================================== */
+
+table.risk-matrix {
+    border-collapse: collapse;
+    margin: 1em auto;
+    font-size: 8.5pt;
+    text-align: center;
+}
+
+.risk-matrix th,
+.risk-matrix td {
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    min-width: 70px;
+    vertical-align: middle;
+}
+
+.risk-matrix thead th {
+    background-color: #0f3460;
+    color: #fff;
+    font-weight: 600;
+    font-size: 8pt;
+}
+
+.risk-matrix tbody th {
+    background-color: #e8edf5;
+    font-weight: 600;
+    color: #0f3460;
+    text-align: right;
+    padding-right: 10px;
+    white-space: nowrap;
+}
+
+/* Cores dos níveis de risco */
+.risk-low       { background-color: #28a745; color: #fff; font-weight: 700; }
+.risk-medium    { background-color: #ffc107; color: #333; font-weight: 700; }
+.risk-high      { background-color: #fd7e14; color: #fff; font-weight: 700; }
+.risk-very-high { background-color: #dc3545; color: #fff; font-weight: 700; }
+.risk-critical  { background-color: #721c24; color: #fff; font-weight: 700; }
+
+
+/* ==========================================================================
+   EQUIPAMENTOS — Blocos de análise individual
+   ========================================================================== */
+
+.equipment-block {
+    margin-top: 1.5em;
+}
+
+.equipment-title {
+    font-size: 12pt;
+    color: #0f3460;
+    margin-bottom: 0.5em;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* Dados complementares do equipamento */
+.equipment-info-table {
+    width: 100%;
+    text-align: left;
+    border-collapse: collapse;
+    margin: 0.3em 0 0.8em 0;
+    font-size: 9.5pt;
+}
+
+.equipment-info-table td {
+    padding: 3px 8px;
+    vertical-align: top;
+    border: none;
+}
+
+.equipment-info-table .eq-label {
+    font-weight: 700;
+    color: #0f3460;
+    white-space: nowrap;
+    width: 35%;
+}
+
+/* Imagens com legenda */
+.equipment-images {
+    margin: 0.8em 0;
+    width: 100%;
+    font-size: 0; /* remove inline-block whitespace */
+}
+
+.equipment-images::after {
+    content: "";
+    display: block;
+    clear: both;
+}
+
+.equipment-photo {
+    display: inline-block;
+    vertical-align: top;
+    text-align: center;
+    box-sizing: border-box;
+    font-size: 10pt; /* restore font-size */
+}
+
+/* Larguras dinâmicas por quantidade de imagens */
+.equipment-photo.photo-count-1 { width: 100%; }
+.equipment-photo.photo-count-2 { width: 49%; margin-right: 1%; }
+.equipment-photo.photo-count-3 { width: 32%; margin-right: 1%; }
+.equipment-photo.photo-count-4 { width: 49%; margin-right: 1%; margin-bottom: 10px; }
+
+.equipment-photo img {
+    display: block;
+    width: 100%;
+    max-height: 400px;
+    object-fit: contain;
+    height: auto;
+    border: none;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.equipment-image {
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+.equipment-image img {
+    display: block;
+    max-width: 100%;
+    max-height: 400px;
+    object-fit: contain;
+    border: none;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Listas dentro da análise de equipamento */
+.detail-list {
+    margin: 0.3em 0 0.6em 1.5em;
+}
+
+.detail-list li {
+    margin-bottom: 0.25em;
+    line-height: 1.45;
+}
+
+ul.detail-list {
+    list-style: disc;
+}
+
+ol.detail-list {
+    list-style: decimal;
+}
+
+/* Referência normativa dentro de recomendação */
+.norma-ref {
+    display: inline-block;
+    font-size: 0.88em;
+    color: #0f3460;
+    margin-top: 0.15em;
+}
+
+/* Tabela de classificação do risco (por equipamento) */
+.risk-table {
+    width: auto;
+    border-collapse: collapse;
+    margin: 0.3em 0 0.6em 0;
+    font-size: 10pt;
+}
+
+.risk-table td {
+    padding: 4px 12px 4px 0;
+    border: none;
+    vertical-align: top;
+}
+
+.risk-label {
+    font-weight: 600;
+    color: #0f3460;
+    white-space: nowrap;
+}
+
+.risk-value {
+    font-weight: 700;
+    color: #0f3460;
+}
+
+/* Badge de risco colorido */
+.risk-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 3px;
+    font-weight: 700;
+    font-size: 9pt;
+    color: #fff;
+}
+
+/* Risco residual (pós-implementação) */
+.residual-risk-title {
+    color: #0f3460;
+    font-size: 9pt;
+    margin-top: 8px;
+    margin-bottom: 4px;
+    font-style: normal;
+}
+
+.risk-table-residual {
+    opacity: 0.9;
+}
+
+.summary-count {
+    margin-top: 1em;
+    font-size: 10pt;
+    color: #0f3460;
+    page-break-before: avoid;
+    break-before: avoid;
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+/* ==========================================================================
+   PRINT RULES — repetição de cabeçalho, quebra de tabelas/figuras
+   ========================================================================== */
+table { page-break-inside: auto; }
+thead { display: table-header-group; }
+tfoot { display: table-footer-group; }
+tr    { page-break-inside: avoid; break-inside: avoid; }
+figure, .equipment-photo { break-inside: avoid; page-break-inside: avoid; }
+h1, h2, h3, h4 { break-after: avoid; page-break-after: avoid; }
+
+
+
+/* ==========================================================================
+   RECOMENDAÇÕES
+   ========================================================================== */
+
+table.consolidated-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1em 0;
+    font-size: 8.5pt;
+}
+
+.consolidated-table thead {
+    background-color: #0f3460;
+    color: #fff;
+}
+
+.consolidated-table thead th {
+    padding: 5px 6px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 8pt;
+}
+
+.consolidated-table tbody td {
+    padding: 4px 6px;
+    border-bottom: 1px solid #ddd;
+    vertical-align: top;
+}
+
+.consolidated-table tbody tr:nth-child(even) {
+    background-color: #f7f8fa;
+}
+
+/* Prioridade badges */
+.priority-urgente { background-color: #721c24; color: #fff; padding: 2px 6px; border-radius: 2px; font-weight: 700; font-size: 8pt; }
+.priority-alta    { background-color: #dc3545; color: #fff; padding: 2px 6px; border-radius: 2px; font-weight: 700; font-size: 8pt; }
+.priority-media   { background-color: #ffc107; color: #333; padding: 2px 6px; border-radius: 2px; font-weight: 700; font-size: 8pt; }
+.priority-baixa   { background-color: #28a745; color: #fff; padding: 2px 6px; border-radius: 2px; font-weight: 700; font-size: 8pt; }
+
+
+/* ==========================================================================
+   CLASSIFICAÇÃO DE RISCO GERAL (resumo)
+   ========================================================================== */
+
+.risk-distribution {
+    margin: 1em 0;
+}
+
+.risk-distribution table {
+    width: auto;
+    border-collapse: collapse;
+    margin: 0.5em 0;
+    font-size: 10pt;
+}
+
+.risk-distribution td,
+.risk-distribution th {
+    padding: 5px 14px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+.risk-distribution thead th {
+    background-color: #e8edf5;
+    font-weight: 600;
+    color: #0f3460;
+}
+
+
+/* ==========================================================================
+   TABELA DO INVENTÁRIO (Anexo)
+   ========================================================================== */
+
+.annex-landscape {
+    page: landscape;
+}
+
+table.inventory-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1em 0;
+    font-size: 6.5pt;
+    table-layout: fixed;
+    word-break: break-word;
+}
+
+.inventory-table thead {
+    background-color: #0f3460;
+    color: #fff;
+}
+
+.inventory-table thead th {
+    padding: 4px 4px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 6.5pt;
+}
+
+.inventory-table tbody td {
+    padding: 3px 4px;
+    border-bottom: 1px solid #ddd;
+    vertical-align: top;
+}
+
+.inventory-table tbody tr:nth-child(even) {
+    background-color: #f7f8fa;
+}
+
+
+/* ==========================================================================
+   REFERÊNCIAS NORMATIVAS
+   ========================================================================== */
+
+.references-section h3 {
+    font-size: 11pt;
+    margin-top: 1em;
+    margin-bottom: 0.3em;
+    color: #0f3460;
+}
+
+.references-list {
+    list-style: disc;
+    margin: 0.3em 0 0.5em 1.5em;
+}
+
+.references-list li {
+    margin-bottom: 0.35em;
+    line-height: 1.4;
+}
+
+
+/* ==========================================================================
+   ENCERRAMENTO / ASSINATURA
+   ========================================================================== */
+
+.encerramento ul {
+    list-style: disc;
+    margin: 0.5em 0 0.5em 1.5em;
+}
+
+.encerramento li {
+    margin-bottom: 0.3em;
+}
+
+.signature-block {
+    margin-top: 4em;
+    text-align: center;
+}
+
+.signature {
+    display: inline-block;
+    text-align: center;
+    margin-top: 3em;
+}
+
+.signature-line {
+    width: 280px;
+    border-bottom: 1px solid #333;
+    margin: 0 auto 0.5em auto;
+}
+
+.signature-name {
+    font-weight: 700;
+    font-size: 10pt;
+    color: #0f3460;
+    text-align: center;
+}
+
+.signature-role {
+    font-size: 9pt;
+    color: #0f3460;
+    text-align: center;
+}
+
+.signature-art {
+    font-size: 8.5pt;
+    color: #0f3460;
+    text-align: center;
+    margin-top: 0.3em;
+}
+
+.stamp-area {
+    width: 200px;
+    height: 80px;
+    border: 1px dashed #aaa;
+    margin: 1.5em auto 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 7.5pt;
+    color: #0f3460;
+}
+
+/* Código do documento (Feature 5) */
+.document-code {
+    margin-top: 30px;
+    font-size: 9pt;
+    color: #0f3460;
+    text-align: center;
+}
+
+/* ---------- Encerramento – novo layout (imagem referência) ---------- */
+
+.encerramento-quote {
+    font-style: italic;
+    margin: 1.8em 1em 1.8em 1.5em;
+    padding: 0;
+    border: none;
+    color: #0f3460;
+    line-height: 1.6;
+}
+
+.encerramento-quote p {
+    margin: 0 0 0.3em 0;
+    text-align: justify;
+}
+
+.encerramento-city {
+    text-align: right;
+    margin-top: 3em;
+    font-size: 10pt;
+    color: #0f3460;
+}
+
+.encerramento-contact {
+    margin-top: 4em;
+    text-align: left;
+    line-height: 1.3;
+}
+
+.encerramento-contact p {
+    margin: 0;
+    font-size: 9.5pt;
+    color: #0f3460;
+}
+
+.encerramento-contact .contact-name {
+    font-weight: 700;
+    font-size: 10.5pt;
+    color: #0f3460;
+}
+
+.encerramento-contact .contact-role {
+    font-size: 9.5pt;
+    color: #0f3460;
+    margin-bottom: 0.3em;
+}
+
+.encerramento-contact .contact-phone {
+    font-size: 9pt;
+    color: #0f3460;
+}
+
+.encerramento-contact .contact-link a {
+    font-size: 9pt;
+    color: #0f3460;
+    text-decoration: none;
+}
+
+.encerramento-assinatura {
+    width: 180px;
+    display: block;
+    margin-bottom: 0.2em;
+}
+
+.encerramento-logo {
+    width: 120px;
+    display: block;
+    margin-top: 1.5em;
+}
+
+
+/* ==========================================================================
+   UTILITÁRIOS
+   ========================================================================== */
+
+.text-center { text-align: center; }
+.text-right  { text-align: right; }
+.text-muted  { color: #0f3460; font-style: italic; }
+.mt-1 { margin-top: 0.5em; }
+.mt-2 { margin-top: 1em; }
+.mb-1 { margin-bottom: 0.5em; }
+.mb-2 { margin-bottom: 1em; }
+.page-break { page-break-before: always; }
+.no-break { page-break-inside: avoid; }

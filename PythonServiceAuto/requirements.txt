@@ -1,0 +1,24 @@
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+python-dotenv
+python-multipart
+
+# Banco de dados (Postgres async)
+sqlalchemy[asyncio]>=2.0
+asyncpg
+
+pandas
+openpyxl
+
+jinja2
+weasyprint
+
+httpx
+tenacity
+loguru
+
+# Testes
+pytest
+pytest-asyncio

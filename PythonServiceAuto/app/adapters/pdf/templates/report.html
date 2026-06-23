@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ profile_config.titulo_relatorio | default("Relatório Técnico") | replace('\n',' — ') }} — {{ metadata.razao_social | default("Empresa") }}</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+{% macro risk_badge(value, small=False) -%}
+  {% set text = (value | default("—", true)) | string | trim %}
+  {% set normalized = text | lower %}
+  {% set compact_style = " font-size: 7pt; padding: 1px 4px;" if small else "" %}
+  {% if "muito alt" in normalized or "catastr" in normalized or normalized == "iv" or "iv " in normalized %}
+    <span class="risk-badge" style="background-color: #dc3545;{{ compact_style }}">{{ text }}</span>
+  {% elif "alt" in normalized or normalized == "iii" or "iii " in normalized %}
+    <span class="risk-badge" style="background-color: #fd7e14;{{ compact_style }}">{{ text }}</span>
+  {% elif "médi" in normalized or "medi" in normalized or normalized == "ii" or "ii " in normalized %}
+    <span class="risk-badge" style="background-color: #ffc107; color: #333;{{ compact_style }}">{{ text }}</span>
+  {% elif "baix" in normalized or normalized == "i" or "i " in normalized %}
+    <span class="risk-badge" style="background-color: #28a745;{{ compact_style }}">{{ text }}</span>
+  {% else %}
+    {{ text }}
+  {% endif %}
+{%- endmacro %}
+
+{% set responsavel_tecnico = metadata.responsavel | default(profile_config.responsavel_tecnico | default("Francisco Flávio Melo Cavalcante"), true) %}
+{% set registro_profissional = metadata.registro_profissional | default(profile_config.registro_profissional | default("CREA SP – 5060562076"), true) %}
+{% set rodape_endereco = metadata.rodape_endereco | default(profile_config.rodape_endereco | default("Gomes de Carvalho, 1255, sobreloja, Vila Olímpia, São Paulo/SP - CEP 04547-005"), true) %}
+{% set rodape_telefone = metadata.rodape_telefone | default(profile_config.rodape_telefone | default("+55 (11) 3046-3648"), true) %}
+{% set rodape_email = metadata.rodape_email | default(profile_config.rodape_email | default("flavio.cavalcante@konis.com.br"), true) %}
+
+{# ====================================================================
+   RUNNING HEADER — Logo + título + revisão em TODAS as páginas
+   (exceto a capa, controlado via @page :first no CSS)
+   ==================================================================== #}
+<div class="running-header">
+  <img src="konis_logo.png" alt="Konis" />
+  <span class="running-header-title">
+    {{ profile_config.titulo_relatorio | default("Relatório Técnico") | replace('\n',' — ') }}
+  </span>
+  <span class="running-header-rev">
+    {{ metadata.codigo_documento | default("") }}
+    {% if metadata.revisao %} — Rev. {{ metadata.revisao }}{% endif %}
+  </span>
+  <span class="running-header-page"></span>
+</div>
+
+<div class="running-footer">
+  <strong>Konis Ex do Brasil Ltda.</strong>
+  | {{ rodape_endereco }}
+  | T {{ rodape_telefone }}
+  | {{ rodape_email }}
+</div>
+
+
+{# ====================================================================
+   CAPA
+   ==================================================================== #}
+<div class="cover">
+  {# Logo no canto superior esquerdo #}
+  <div class="cover-logo-topleft">
+    <img src="konis_logo.png" alt="Konis Safety Engenharia" />
+  </div>
+
+  <div class="cover-content">
+    {# Título do relatório (pode ter \n no config) #}
+    {% for line in (profile_config.titulo_relatorio | default("RELATÓRIO TÉCNICO")).split('\n') %}
+      {% if loop.first %}
+        <h1 class="cover-title">{{ line }}</h1>
+      {% else %}
+        <p class="cover-subtitle-main">{{ line }}</p>
+      {% endif %}
+    {% endfor %}
+
+    {% if profile_config.subtitulo %}
+      <p class="cover-subtitle">{{ profile_config.subtitulo }}</p>
+    {% endif %}
+
+    {% if metadata.codigo_documento %}
+    <p class="cover-doc-code">
+      {{ metadata.codigo_documento }}
+      {% if metadata.revisao %} — Revisão {{ metadata.revisao }}{% endif %}
+    </p>
+    {% endif %}
+
+    <table class="cover-table">
+      <tbody>
+        <tr>
+          <td class="cover-label">Cliente:</td>
+          <td class="cover-value-bold">{{ metadata.razao_social | default("—") }}</td>
+        </tr>
+        {% if metadata.cnpj %}
+        <tr>
+          <td class="cover-label">CNPJ:</td>
+          <td>{{ metadata.cnpj }}</td>
+        </tr>
+        {% endif %}
+        {% if metadata.site %}
+        <tr>
+          <td class="cover-label">Unidade:</td>
+          <td>{{ metadata.site }}</td>
+        </tr>
+        {% endif %}
+        {% if metadata.local_vistoriado %}
+        <tr>
+          <td class="cover-label">Local vistoriado:</td>
+          <td>{{ metadata.local_vistoriado }}</td>
+        </tr>
+        {% endif %}
+        {% if metadata.data_avaliacao %}
+        <tr>
+          <td class="cover-label">Data da vistoria:</td>
+          <td>{{ metadata.data_avaliacao }}</td>
+        </tr>
+        {% endif %}
+        {% if metadata.contrato %}
+        <tr>
+          <td class="cover-label">Contrato:</td>
+          <td>{{ metadata.contrato }}</td>
+        </tr>
+        {% endif %}
+        {% if metadata.elaboracao %}
+        <tr>
+          <td class="cover-label">Elaboração:</td>
+          <td>{{ metadata.elaboracao }}</td>
+        </tr>
+        {% endif %}
+        {% if responsavel_tecnico %}
+        <tr>
+          <td class="cover-label">Responsável Técnico:</td>
+          <td>{{ responsavel_tecnico }}</td>
+        </tr>
+        {% endif %}
+        {% if registro_profissional %}
+        <tr>
+          <td class="cover-label">CREA:</td>
+          <td>{{ registro_profissional }}</td>
+        </tr>
+        {% endif %}
+        {% if metadata.art_numero %}
+        <tr>
+          <td class="cover-label">ART:</td>
+          <td>{{ metadata.art_numero }}</td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+
+    {% if metadata.cover_image_url %}
+    <div class="cover-image">
+      <img src="{{ metadata.cover_image_url }}" alt="Imagem de capa do relatório" />
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+
+{# ====================================================================
+   TABELA DE CONTROLE DE VERSÃO
+   Espaço vazio para preenchimento manual (correções futuras)
+   ==================================================================== #}
+<div class="revision-control">
+  <h2 style="border-bottom: none; text-align: center; font-size: 14pt; letter-spacing: 0.5px; margin-bottom: 1em;">
+    TABELA DE CONTROLE DE VERSÃO
+  </h2>
+  <table class="revision-table">
+    <thead>
+      <tr>
+        <th style="width: 15%">Nº da versão</th>
+        <th style="width: 20%">Data de alteração</th>
+        <th style="width: 25%">Autor</th>
+        <th style="width: 40%">Modificações realizadas</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for rev in metadata.revisions | default([]) %}
+      <tr>
+        <td>{{ rev.version }}</td>
+        <td>{{ rev.date }}</td>
+        <td>{{ rev.author }}</td>
+        <td>{{ rev.description }}</td>
+      </tr>
+      {% endfor %}
+      {% if (metadata.revisions | default([]) | length) == 0 %}
+      <tr>
+        <td class="revision-empty">&nbsp;</td>
+        <td class="revision-empty">&nbsp;</td>
+        <td class="revision-empty">&nbsp;</td>
+        <td class="revision-empty">&nbsp;</td>
+      </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+
+{# ====================================================================
+   APRESENTAÇÃO TÉCNICA E IMPORTÂNCIA DOS SERVIÇOS (estática)
+   ==================================================================== #}
+<div class="apresentacao-section">
+
+  <h2 style="border-bottom: none; text-align: center; font-size: 14pt; letter-spacing: 0.5px; line-height: 1.35;">
+    KONIS EX – APRESENTAÇÃO TÉCNICA E<br/>IMPORTÂNCIA DOS SERVIÇOS
+  </h2>
+
+  <p>
+    A <strong>KONIS EX DO BRASIL</strong> é uma empresa de consultoria e engenharia
+    especializada em segurança de processos aplicada a atmosferas explosivas, com atuação
+    focada na prevenção e mitigação de eventos de incêndio e explosão associados a poeiras
+    combustíveis e gases/vapores inflamáveis. Seus serviços são desenvolvidos com base em
+    metodologias de identificação de perigos, avaliação de riscos e definição de medidas
+    técnicas e organizacionais de controle, visando reduzir a probabilidade de ocorrência de
+    eventos e limitar suas consequências, assegurando conformidade normativa e melhoria
+    contínua do desempenho de segurança.
+  </p>
+
+  {# ---------- 1. ESCOPO DE SERVIÇOS TÉCNICOS ---------- #}
+  <h3 class="apresentacao-h3">1. ESCOPO DE SERVIÇOS TÉCNICOS</h3>
+
+  <p>
+    A KONIS presta serviços técnicos integrados, abrangendo, conforme aplicável ao
+    processo e aos materiais manuseados:
+  </p>
+
+  <h4 class="apresentacao-h4">1.1 DUST HAZARD ANALYSIS (DHA) – POEIRAS COMBUSTÍVEIS</h4>
+  <p>
+    Elaboração de DHA por área e por equipamento, com identificação de cenários de risco,
+    fontes de ignição, condições de formação de nuvem de poeira, potencial de propagação e
+    recomendações de controle. O DHA contempla, quando aplicável:
+  </p>
+  <ul class="detail-list">
+    <li>Caracterização do perigo (propriedades de explosividade e combustibilidade do pó, quando disponíveis);</li>
+    <li>Avaliação qualitativa/semiquantitativa de risco (probabilidade x severidade);</li>
+    <li>Definição de recomendações de prevenção (redução de emissões fugitivas, housekeeping, controle de fontes de ignição, medidas de manutenção e operação);</li>
+    <li>Definição de requisitos de mitigação (proteção contraexplosão) quando tecnicamente aplicável.</li>
+  </ul>
+
+  <h4 class="apresentacao-h4">1.2 CLASSIFICAÇÃO DE ÁREAS – ATMOSFERAS EXPLOSIVAS (GASES/VAPORES E POEIRAS)</h4>
+  <p>
+    Desenvolvimento de estudos e documentos de classificação de áreas, incluindo
+    critérios de liberação, grau e disponibilidade de ventilação, extensão de zonas e diretrizes
+    para seleção de equipamentos. Entregáveis típicos:
+  </p>
+  <ul class="detail-list">
+    <li>Relatório técnico de classificação;</li>
+    <li>Planilhas/tabelas de classificação;</li>
+    <li>Recomendações para adequação de equipamentos e instalações.</li>
+  </ul>
+
+  <h4 class="apresentacao-h4">1.3 ESPECIFICAÇÃO E DIMENSIONAMENTO DE SISTEMAS DE PROTEÇÃO CONTRAEXPLOSÃO</h4>
+  <p>
+    Definição técnica de medidas de mitigação para equipamentos e sistemas de
+    processo, conforme viabilidade de aplicação e características de processo/volume,
+    incluindo:
+  </p>
+  <ul class="detail-list">
+    <li>Alívio de explosão (painéis/vents e, quando aplicável, soluções sem chama);</li>
+    <li>Isolamento de explosão (válvulas, barreiras e dispositivos de isolamento mecânico/ativo);</li>
+    <li>Supressão de explosão (quando aplicável);</li>
+    <li>Avaliação de interfaces com dutos e efeitos de propagação;</li>
+    <li>Recomendações de instalação, intertravamentos e requisitos de manutenção/inspeção.</li>
+  </ul>
+
+  <h4 class="apresentacao-h4">1.4 PREVENÇÃO: CONTROLE DE FONTES DE IGNIÇÃO, ASPIRAÇÃO E BOAS PRÁTICAS OPERACIONAIS</h4>
+  <p>Recomendações e suporte técnico para:</p>
+  <ul class="detail-list">
+    <li>Controle de ignição (superaquecimento, atrito, faíscas mecânicas, eletricidade estática, falhas elétricas, trabalhos a quente);</li>
+    <li>Melhorias de aspiração/ventilação local exaustor e controle de poeira;</li>
+    <li>Adequações de housekeeping, procedimentos e manutenção preventiva/preditiva;</li>
+    <li>Requisitos de aterramento, equipotencialização e seleção de materiais quando aplicável.</li>
+  </ul>
+
+  {# ---------- 2. IMPORTÂNCIA E CONTRIBUIÇÃO ---------- #}
+  <h3 class="apresentacao-h3">2. IMPORTÂNCIA E CONTRIBUIÇÃO PARA A SEGURANÇA E CONFORMIDADE</h3>
+
+  <p>
+    Os serviços da KONIS EX são essenciais para transformar riscos inerentes ao
+    processo em critérios de engenharia, estabelecendo uma base técnica para tomada de
+    decisão e priorização de medidas. Em termos práticos, os estudos e recomendações
+    proporcionam:
+  </p>
+  <ul class="detail-list">
+    <li>Redução da probabilidade de formação de atmosferas explosivas e de ocorrência de ignições;</li>
+    <li>Mitigação das consequências de eventos, protegendo pessoas, ativos e continuidade operacional;</li>
+    <li>Suporte à conformidade normativa e requisitos de seguradoras, auditorias e governança HSE;</li>
+    <li>Padronização de critérios técnicos para especificação de equipamentos, melhorias e retrofits;</li>
+    <li>Aumento da confiabilidade operacional e redução de perdas por paradas e incidentes.</li>
+  </ul>
+
+  {# ---------- 3. MATRIZ DE RISCO: SEVERIDADE X PROBABILIDADE ---------- #}
+  <h3 class="apresentacao-h3">3. MATRIZ DE RISCO: SEVERIDADE X PROBABILIDADE</h3>
+
+  <h4 class="apresentacao-h4">3.1 OBJETIVO</h4>
+  <p>
+    Apresentar a matriz de cruzamento entre Severidade e Probabilidade (QUADRO 1), com três
+    categorias para cada parâmetro (Alta, Média e Baixa), e explicar o significado do resultado
+    obtido, para avaliação e interpretação dos resultados.
+  </p>
+
+  <h4 class="apresentacao-h4">3.2 MATRIZ DE CRUZAMENTO</h4>
+  <p><strong>Quadro 1 – Matriz de Severidade e Probabilidade</strong></p>
+
+  <table class="risk-matrix-3x3">
+    <thead>
+      <tr>
+        <th>Severidade \ Probabilidade</th>
+        <th>Baixa</th>
+        <th>Média</th>
+        <th>Alta</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>Baixa</th>
+        <td class="risk-3x3-baixo">Baixo</td>
+        <td class="risk-3x3-baixo">Baixo</td>
+        <td class="risk-3x3-medio">Médio</td>
+      </tr>
+      <tr>
+        <th>Média</th>
+        <td class="risk-3x3-baixo">Baixo</td>
+        <td class="risk-3x3-medio">Médio</td>
+        <td class="risk-3x3-alto">Alto</td>
+      </tr>
+      <tr>
+        <th>Alta</th>
+        <td class="risk-3x3-medio">Médio</td>
+        <td class="risk-3x3-alto">Alto</td>
+        <td class="risk-3x3-alto">Alto</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h5 class="apresentacao-h5">3.2.1 Lógica da matriz</h5>
+
+  <p>
+    A <strong>Severidade</strong> representa a intensidade das consequências caso a explosão ocorra.
+    Para essa categorização, considera-se a violência da explosão e os impactos que ela pode causar
+    em pessoas, equipamentos, estrutura, processo e continuidade operacional.
+  </p>
+  <p>
+    A severidade também é influenciada pela existência de sistemas de proteção contraexplosão.
+    Quando o equipamento possui proteção adequada, os efeitos da explosão tendem a ser controlados
+    e a severidade do cenário é reduzida. Na ausência dessas medidas, ou quando são insuficientes,
+    a severidade aumenta.
+  </p>
+  <ul class="detail-list">
+    <li><strong>Baixa:</strong> impactos limitados e controlados, com menor potencial de dano.</li>
+    <li><strong>Média:</strong> impactos relevantes, porém com algum nível de controle ou limitação das consequências.</li>
+    <li><strong>Alta:</strong> impactos severos sobre pessoas, instalações e operação, especialmente em cenários sem proteção adequada ou com potencial de propagação.</li>
+  </ul>
+
+  <p>
+    Quando esses meios de prevenção estão presentes e funcionando adequadamente, a probabilidade
+    da explosão é classificada como baixa. Quando existe apenas parte dessas medidas, ou quando os
+    controles existentes reduzem o risco apenas de forma parcial, a probabilidade pode ser classificada
+    como média. Quando há poucos controles relevantes, ou nenhum controle efetivo, a probabilidade é
+    classificada como alta.
+  </p>
+  <p>
+    Em elevadores, por exemplo, são considerados itens como sensores de subvelocidade, monitoramento
+    de velocidade, sensores de temperatura, detecção de embuchamento, uso de canecas plásticas quando
+    aplicável ao critério adotado, sistema de aterramento adequado e aspiração de pó no pé, na cabeça
+    e no corpo do equipamento.
+  </p>
+  <p>
+    A <strong>Probabilidade</strong> representa a chance de a explosão acontecer. Para essa definição,
+    avalia-se a presença e a qualidade dos meios de prevenção de explosão existentes no equipamento e no processo.
+  </p>
+  <p>
+    Logicamente, temos que ter os cinco componentes da explosão de poeira.
+  </p>
+  <p>
+    Os cinco componentes da explosão de poeira formam o chamado <strong>pentágono da explosão</strong>:
+  </p>
+  <ul class="detail-list">
+    <li><strong>Poeira combustível</strong> — É o material particulado que pode queimar rapidamente, como pó de grãos, açúcar, farinha, amido, madeira, carvão, entre outros.</li>
+    <li><strong>Oxigênio</strong> — Normalmente vem do ar atmosférico. Sem oxigênio suficiente, a combustão não se sustenta.</li>
+    <li><strong>Fonte de ignição</strong> — É o que dá início à combustão, como centelha, faísca mecânica, superfície quente, atrito, eletricidade estática ou equipamento superaquecido.</li>
+    <li><strong>Dispersão da poeira em nuvem</strong> — A poeira precisa estar suspensa no ar em concentração perigosa. Poeira acumulada no chão não explode da mesma forma que poeira dispersa em nuvem.</li>
+    <li><strong>Confinamento</strong> — A explosão de poeira normalmente ganha força quando acontece dentro de um espaço confinado ou parcialmente confinado, como elevadores, filtros, silos, transportadores, moegas e equipamentos de processo.</li>
+  </ul>
+  <p>
+    Para ocorrer uma explosão de poeira, não basta existir apenas poeira combustível. É preciso que esses
+    cinco elementos estejam presentes ao mesmo tempo. Se faltar um deles, a explosão não acontece.
+  </p>
+  <p>
+    <strong>Exemplo prático</strong> — em um elevador de grãos, pode haver:
+  </p>
+  <ul class="detail-list">
+    <li>poeira combustível do produto,</li>
+    <li>oxigênio do ar,</li>
+    <li>uma fonte de ignição, como aquecimento ou desalinhamento,</li>
+    <li>poeira dispersa pela movimentação,</li>
+    <li>e confinamento no corpo do elevador.</li>
+  </ul>
+  <p>
+    Por isso esse tipo de equipamento exige tanta atenção em prevenção e proteção contraexplosão.
+  </p>
+
+  {# ---------- 3.3 COMO INTERPRETAR OS RESULTADOS ---------- #}
+  <h4 class="apresentacao-h4">3.3 COMO INTERPRETAR OS RESULTADOS NA PRÁTICA</h4>
+
+  <h5 class="apresentacao-h5">3.3.1 Severidade</h5>
+  <p>
+    Se o equipamento possui medidas de proteção contraexplosão, como alívio, supressão, isolamento
+    ou outras barreiras eficazes, a consequência do evento tende a ser controlada, reduzindo a severidade
+    atribuída ao cenário. No sentido oposto, quando essas proteções não existem, a severidade sobe,
+    porque os efeitos da explosão podem atingir mais áreas, mais pessoas e causar danos maiores.
+  </p>
+  <p>
+    Na prática, a severidade responde à pergunta: <em>"Se a explosão acontecer, qual será a força do
+    evento e quem ou o que pode ser impactado?"</em>.
+  </p>
+
+  <h5 class="apresentacao-h5">3.3.2 Probabilidade</h5>
+  <p>Ela responde à pergunta:</p>
+  <p>
+    <em>"Quão fácil ou frequente é formar uma atmosfera explosiva e aparecer uma fonte de ignição?"</em>.
+    Em outras palavras, a probabilidade aumenta quando:
+  </p>
+  <ul class="detail-list">
+    <li>há poeira combustível,</li>
+    <li>essa poeira fica suspensa no ar,</li>
+    <li>existe chance de faísca, calor ou atrito,</li>
+    <li>e faltam controles para evitar ou detectar isso.</li>
+  </ul>
+  <p>
+    Por exemplo, o elevador de canecas já é um equipamento mais crítico porque trabalha com:
+    poeira combustível, movimentação constante, atrito mecânico e ambiente confinado.
+  </p>
+  <p>
+    Por isso, quando faltam meios de prevenção, a probabilidade de explosão aumenta. Por exemplo, se não houver:
+  </p>
+  <ul class="detail-list">
+    <li>sensor de temperatura,</li>
+    <li>sensor de subvelocidade,</li>
+    <li>sensor de embuchamento,</li>
+    <li>monitor de desalinhamento,</li>
+    <li>captação de pó,</li>
+    <li>equipamentos Ex,</li>
+  </ul>
+  <p>O risco aumenta porque fica mais fácil acontecer:</p>
+  <ul class="detail-list">
+    <li>aquecimento,</li>
+    <li>atrito,</li>
+    <li>travamento,</li>
+    <li>acúmulo de pó,</li>
+    <li>nuvem de poeira,</li>
+    <li>e uma ignição sem ser percebida a tempo.</li>
+  </ul>
+  <p>
+    No elevador de canecas, essa chance aumenta quando o equipamento opera sem monitoramento
+    e sem prevenção, porque os desvios deixam de ser detectados e a poeira com ignição pode
+    evoluir para explosão.
+  </p>
+
+  {# ---------- 3.4 CLASSIFICAÇÃO DO RISCO ---------- #}
+  <h4 class="apresentacao-h4">3.4 CLASSIFICAÇÃO DO RISCO</h4>
+
+  <p>
+    <strong>Baixo:</strong> Indica uma condição de risco reduzido, resultante da combinação de severidade
+    e probabilidade baixas, ou de uma delas em nível moderado com baixa chance de ocorrência. Mesmo
+    sendo classificado como baixo, o cenário deve permanecer sob controle e monitoramento.
+  </p>
+  <p>
+    <strong>Médio:</strong> Indica uma condição de atenção, em que existe potencial relevante de impacto
+    ou uma chance de ocorrência que não pode ser ignorada. Esse resultado mostra que o cenário precisa
+    de medidas de controle, acompanhamento e, quando aplicável, ações de melhoria para redução do risco.
+  </p>
+  <p>
+    <strong>Alto:</strong> Indica uma condição crítica, em que a combinação entre severidade e probabilidade
+    representa risco significativo para pessoas, processo, equipamentos e continuidade operacional. Esse
+    resultado exige prioridade na implementação de medidas preventivas e corretivas, visando reduzir a
+    probabilidade de ocorrência e/ou a severidade das consequências.
+  </p>
+
+  <h5 class="apresentacao-h5">3.4.1 Interpretação dos cruzamentos</h5>
+  <ul class="detail-list">
+    <li>Baixa severidade + Baixa probabilidade = <strong>Baixo</strong></li>
+    <li>Baixa severidade + Média probabilidade = <strong>Baixo</strong></li>
+    <li>Baixa severidade + Alta probabilidade = <strong>Médio</strong></li>
+    <li>Média severidade + Baixa probabilidade = <strong>Baixo</strong></li>
+    <li>Média severidade + Média probabilidade = <strong>Médio</strong></li>
+    <li>Média severidade + Alta probabilidade = <strong>Alto</strong></li>
+    <li>Alta severidade + Baixa probabilidade = <strong>Médio</strong></li>
+    <li>Alta severidade + Média probabilidade = <strong>Alto</strong></li>
+    <li>Alta severidade + Alta probabilidade = <strong>Alto</strong></li>
+  </ul>
+
+  {# ---------- 3.5 AVALIAÇÃO PÓS-IMPLEMENTAÇÃO ---------- #}
+  <h4 class="apresentacao-h4">3.5 AVALIAÇÃO PÓS-IMPLEMENTAÇÃO DAS RECOMENDAÇÕES</h4>
+
+  <p>
+    A avaliação pós-implementação corresponde à análise do risco residual esperado, considerando a
+    hipótese de implantação futura das recomendações propostas neste relatório.
+  </p>
+  <p>
+    Ressalta-se que, na data desta avaliação, os apontamentos e recomendações ainda não foram
+    implementados. Dessa forma, a classificação apresentada nesta etapa não representa a condição
+    atual da unidade, mas sim uma classificação futura estimada, elaborada a pedido da empresa, com
+    o objetivo de demonstrar a condição de risco esperada após a adoção dos ajustes recomendados.
+  </p>
+  <p>
+    Essa análise tem como finalidade indicar tecnicamente o potencial de redução de risco associado
+    à implementação das medidas propostas, permitindo visualizar o comportamento esperado do cenário
+    após a introdução de novas salvaguardas.
+  </p>
+  <p>
+    A implementação de medidas como sensores, intertravamentos, captação de pó, limpeza adequada,
+    remoção de materiais estranhos, controle de temperatura, manutenção preventiva, aterramento e
+    adequação de componentes reduz principalmente a <strong>probabilidade</strong>, pois dificulta a
+    formação simultânea de atmosfera explosiva e fonte de ignição.
+  </p>
+  <p>
+    Já a implementação de medidas como alívio de explosão, supressão, isolamento, abafadores de
+    chama e partículas e direcionamento da descarga para área segura reduz a <strong>severidade</strong>,
+    pois limita a propagação, a sobrepressão e a exposição de pessoas e ativos aos efeitos da explosão.
+  </p>
+  <p>
+    Assim, para fins de reclassificação pós-implementação, devem ser observados os seguintes princípios:
+  </p>
+  <ul class="detail-list">
+    <li>quando forem implementadas apenas medidas de prevenção, a tendência é ocorrer redução da probabilidade, podendo a severidade permanecer inalterada;</li>
+    <li>quando forem implementadas medidas de proteção/mitigação, a severidade pode ser reduzida, desde que as barreiras sejam tecnicamente adequadas ao cenário;</li>
+    <li>quando o processo continuar contendo pó combustível, oxidante, possibilidade de dispersão e confinamento, o perigo permanece existente, ainda que o risco tenha sido reduzido;</li>
+    <li>a classificação pós-implementação deve refletir a condição futura esperada, assumindo que as recomendações sejam efetivamente implantadas, mantidas e operadas de forma adequada.</li>
+  </ul>
+  <p>
+    Portanto, esta classificação pós-implementação deve ser entendida como uma projeção técnica de
+    risco futuro, elaborada com base nas melhorias recomendadas, e não como confirmação de que tais
+    medidas já se encontram instaladas ou em operação. Espera-se que, com a execução dos ajustes
+    propostos, haja redução dos danos potenciais e melhoria da condição de segurança do processo,
+    ainda que o perigo não seja integralmente eliminado.
+  </p>
+
+  {# ---------- 4. RESULTADO ESPERADO ---------- #}
+  <h3 class="apresentacao-h3">4. RESULTADO ESPERADO</h3>
+
+  <p>
+    Como resultado, a KONIS EX entrega documentação técnica rastreável (relatórios,
+    planilhas, recomendações e especificações) e um conjunto de ações priorizadas que
+    orientam o cliente na implementação de medidas de prevenção e proteção, promovendo
+    um ambiente industrial mais seguro, robusto e aderente às melhores práticas de engenharia,
+    sob os documentos intitulados: <strong>{{ metadata.codigo_documento | default("—") }}</strong>
+    (este relatório) e a <strong>{{ metadata.filename | default("Planilha DHA") }}</strong>,
+    com suas versões atualizadas em <strong>{{ metadata.data_avaliacao | default("—") }}</strong>.
+  </p>
+
+</div>
+
+
+{# ====================================================================
+   Variável de numeração de seções (depende se tem seção materiais)
+   ==================================================================== #}
+{% set sec_intro = 1 %}
+{% if profile_config.materiais_section | default(false) %}
+  {% set sec_materiais = sec_intro + 1 %}
+  {% set sec_metodo = sec_materiais + 1 %}
+{% else %}
+  {% set sec_metodo = sec_intro + 1 %}
+{% endif %}
+{% set sec_equip = sec_metodo + 1 %}
+{% set sec_recomendacoes = sec_equip + 1 %}
+{% set sec_classif = sec_recomendacoes + 1 %}
+{% set sec_conclusao = sec_classif + 1 %}
+{% set sec_refs = sec_conclusao + 1 %}
+{% set sec_encerramento = sec_refs + 1 %}
+
+
+{# ====================================================================
+   SUMÁRIO
+   ==================================================================== #}
+<div class="toc">
+  <h2 class="toc-title">SUMÁRIO</h2>
+
+  <ul class="toc-list">
+    <li><a class="toc-link" href="#sec-intro"><span class="toc-number">{{ sec_intro }}.</span> Introdução</a></li>
+    <li class="toc-sub"><a class="toc-link" href="#sec-intro-objetivo"><span class="toc-number">{{ sec_intro }}.1.</span> Objetivo</a></li>
+
+    {% if profile_config.materiais_section | default(false) %}
+    <li><a class="toc-link" href="#sec-materiais"><span class="toc-number">{{ sec_materiais }}.</span> Caracterização dos Materiais Combustíveis</a></li>
+    <li class="toc-sub"><a class="toc-link" href="#sec-materiais-1"><span class="toc-number">{{ sec_materiais }}.1.</span> Materiais Presentes na Unidade</a></li>
+    <li class="toc-sub"><a class="toc-link" href="#sec-materiais-2"><span class="toc-number">{{ sec_materiais }}.2.</span> Propriedades Típicas de Explosividade</a></li>
+    <li class="toc-sub"><a class="toc-link" href="#sec-materiais-3"><span class="toc-number">{{ sec_materiais }}.3.</span> Considerações Técnicas</a></li>
+    <li class="toc-sub"><a class="toc-link" href="#sec-materiais-4"><span class="toc-number">{{ sec_materiais }}.4.</span> Conclusão Técnica</a></li>
+    <li><a class="toc-link" href="#sec-metodo"><span class="toc-number">{{ sec_metodo }}.</span> Metodologia Aplicada à Avaliação</a></li>
+    <li class="toc-sub"><a class="toc-link" href="#sec-metodo-1"><span class="toc-number">{{ sec_metodo }}.1.</span> Visão Geral do Método</a></li>
+    <li class="toc-sub"><a class="toc-link" href="#sec-metodo-2"><span class="toc-number">{{ sec_metodo }}.2.</span> Etapas da Avaliação</a></li>
+    <li><a class="toc-link" href="#sec-equip"><span class="toc-number">{{ sec_equip }}.</span> Análise Técnica Individual — Equipamentos</a></li>
+    {% for eq in equipments %}
+    <li class="toc-sub"><a class="toc-link" href="#sec-equip-{{ eq.index }}"><span class="toc-number">{{ sec_equip }}.{{ eq.index }}.</span> {{ eq.nome }}</a></li>
+    {% endfor %}
+    <li><a class="toc-link" href="#sec-recomendacoes"><span class="toc-number">{{ sec_recomendacoes }}.</span> Recomendações</a></li>
+    <li><a class="toc-link" href="#sec-classif"><span class="toc-number">{{ sec_classif }}.</span> Classificação de Risco Geral</a></li>
+    <li><a class="toc-link" href="#sec-conclusao"><span class="toc-number">{{ sec_conclusao }}.</span> Conclusão</a></li>
+    <li><a class="toc-link" href="#sec-refs"><span class="toc-number">{{ sec_refs }}.</span> Referências Normativas</a></li>
+    <li><a class="toc-link" href="#sec-encerramento"><span class="toc-number">{{ sec_encerramento }}.</span> Encerramento</a></li>
+    <li><a class="toc-link" href="#sec-anexo"><span class="toc-number">A.</span> Apêndice A — Itens de risco avaliados</a></li>
+    {% else %}
+    <li><a class="toc-link" href="#sec-metodo"><span class="toc-number">{{ sec_metodo }}.</span> Metodologia Aplicada à Avaliação</a></li>
+    <li class="toc-sub"><a class="toc-link" href="#sec-metodo-1"><span class="toc-number">{{ sec_metodo }}.1.</span> Visão Geral do Método</a></li>
+    <li class="toc-sub"><a class="toc-link" href="#sec-metodo-2"><span class="toc-number">{{ sec_metodo }}.2.</span> Etapas da Avaliação</a></li>
+    <li><a class="toc-link" href="#sec-equip"><span class="toc-number">{{ sec_equip }}.</span> Análise Técnica Individual — Equipamentos</a></li>
+    {% for eq in equipments %}
+    <li class="toc-sub"><a class="toc-link" href="#sec-equip-{{ eq.index }}"><span class="toc-number">{{ sec_equip }}.{{ eq.index }}.</span> {{ eq.nome }}</a></li>
+    {% endfor %}
+    <li><a class="toc-link" href="#sec-recomendacoes"><span class="toc-number">{{ sec_recomendacoes }}.</span> Recomendações</a></li>
+    <li><a class="toc-link" href="#sec-classif"><span class="toc-number">{{ sec_classif }}.</span> Classificação de Risco Geral</a></li>
+    <li><a class="toc-link" href="#sec-conclusao"><span class="toc-number">{{ sec_conclusao }}.</span> Conclusão</a></li>
+    <li><a class="toc-link" href="#sec-refs"><span class="toc-number">{{ sec_refs }}.</span> Referências Normativas</a></li>
+    <li><a class="toc-link" href="#sec-encerramento"><span class="toc-number">{{ sec_encerramento }}.</span> Encerramento</a></li>
+    <li><a class="toc-link" href="#sec-anexo"><span class="toc-number">A.</span> Apêndice A — Itens de risco avaliados</a></li>
+    {% endif %}
+  </ul>
+</div>
+
+
+{# ====================================================================
+   Macro auxiliar: converte texto em parágrafos / listas HTML
+   ==================================================================== #}
+{% macro render_text(text) %}
+  {% if text %}
+    {% for para in text.split('\n\n') %}
+      {% set trimmed = para.strip() %}
+      {% if trimmed %}
+        {# Detectar se é uma lista (bullets ou numerada) #}
+        {% set lines = trimmed.split('\n') %}
+        {% set is_list = (lines[0].strip().startswith('• ') or lines[0].strip().startswith('- ') or lines[0].strip()[:2] in ['1.','2.','3.','4.','5.','6.','7.','8.','9.']) %}
+        {% if is_list %}
+          <ul class="text-list">
+          {% for line in lines %}
+            {% set clean = line.strip().lstrip('•-').lstrip('0123456789.').strip() %}
+            {% if clean %}
+              <li>{{ clean }}</li>
+            {% endif %}
+          {% endfor %}
+          </ul>
+        {% else %}
+          <p>{{ trimmed | replace('\n', '<br/>') }}</p>
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+{% endmacro %}
+
+{# ====================================================================
+   Macro: renderiza lista de items como <ul>
+   ==================================================================== #}
+{% macro render_bullet_list(items) %}
+  {% if items %}
+    <ul class="detail-list">
+    {% for item in items %}
+      {% if item %}
+        <li>{{ item | clean_bullet_text }}</li>
+      {% endif %}
+    {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-muted">Não informado.</p>
+  {% endif %}
+{% endmacro %}
+
+
+{# ====================================================================
+   SEÇÃO: INTRODUÇÃO (com sub-seções estáticas)
+   ==================================================================== #}
+<div class="section">
+  <h2 id="sec-intro"><span class="section-number">{{ sec_intro }}.</span> INTRODUÇÃO</h2>
+
+  <h3 id="sec-intro-objetivo">{{ sec_intro }}.1 Objetivo</h3>
+  {% if llm_sections.introducao %}
+    <div class="llm-content">
+      {{ render_text(llm_sections.introducao) }}
+    </div>
+  {% else %}
+    <p>
+      Este relatório técnico tem como finalidade apresentar os resultados da
+      análise de perigos realizada na unidade da empresa
+      <strong>{{ metadata.razao_social | default("—") }}</strong>,
+      unidade <strong>{{ metadata.site | default("—") }}</strong>,
+      conforme vistoria técnica realizada em {{ metadata.data_avaliacao | default("—") }}.
+    </p>
+    <p>
+      O objetivo principal é identificar cenários de risco associados à presença de
+      {{ profile_config.tipo_atmosfera | default("atmosferas perigosas") }}
+      nos processos operacionais da unidade, avaliar a severidade e a probabilidade
+      de ocorrência de eventos adversos (incêndio e explosão) e propor medidas de
+      controle fundamentadas nas normas técnicas nacionais e internacionais aplicáveis.
+    </p>
+  {% endif %}
+</div>
+
+
+{# ====================================================================
+   SEÇÃO 2: CARACTERIZAÇÃO DOS MATERIAIS COMBUSTÍVEIS
+   (somente se perfil exige — conteúdo gerado pela LLM)
+
+   A LLM deve retornar llm_sections.materiais como dict com:
+     - materiais_presentes: str  (texto descritivo + lista de materiais)
+     - propriedades_tabela: list[dict]  (linhas da tabela de explosividade)
+       Cada dict: {propriedade, col1, col2, col3, ...}
+       Colunas nomeadas conforme os materiais.
+     - propriedades_colunas: list[str]  (nomes das colunas: ex. ["Soja (poeira)", "Milho (poeira)", "Farelo de soja"])
+     - propriedades_intro: str  (parágrafo introdutório antes da tabela)
+     - consideracoes: list[str]  (bullets de considerações técnicas)
+     - conclusao_tecnica: str  (parágrafo de conclusão)
+   Se llm_sections.materiais for uma string simples (legado),
+   renderiza como texto corrido.
+   ==================================================================== #}
+{% if profile_config.materiais_section | default(false) %}
+<div class="section">
+  <h2 id="sec-materiais"><span class="section-number">{{ sec_materiais }}.</span> CARACTERIZAÇÃO DOS MATERIAIS COMBUSTÍVEIS</h2>
+
+  {% if llm_sections.materiais is mapping %}
+    {# ---- 2.1 Materiais Presentes na Unidade ---- #}
+    <h3 id="sec-materiais-1">{{ sec_materiais }}.1 Materiais Presentes na Unidade</h3>
+    <div class="llm-content">
+      {{ render_text(llm_sections.materiais.materiais_presentes) }}
+    </div>
+
+    {# ---- 2.2 Propriedades Típicas de Explosividade ---- #}
+    <h3 id="sec-materiais-2">{{ sec_materiais }}.2 Propriedades Típicas de Explosividade (Dados de Referência)</h3>
+    {% if llm_sections.materiais.propriedades_intro %}
+      <p>{{ llm_sections.materiais.propriedades_intro }}</p>
+    {% endif %}
+
+    {% if llm_sections.materiais.propriedades_tabela %}
+    <table class="criteria-table">
+      <thead>
+        <tr>
+          <th>Propriedade</th>
+          {% for col in llm_sections.materiais.propriedades_colunas %}
+            <th>{{ col }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in llm_sections.materiais.propriedades_tabela %}
+        <tr>
+          <td><strong>{{ row.propriedade }}</strong></td>
+          {% for col in llm_sections.materiais.propriedades_colunas %}
+            <td>{{ row[col] | default("—") }}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+
+    {# ---- 2.3 Considerações Técnicas ---- #}
+    <h3 id="sec-materiais-3">{{ sec_materiais }}.3 Considerações Técnicas</h3>
+    {% if llm_sections.materiais.consideracoes %}
+    <ul class="detail-list">
+      {% for item in llm_sections.materiais.consideracoes %}
+        <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    {# ---- 2.4 Conclusão Técnica ---- #}
+    <h3 id="sec-materiais-4">{{ sec_materiais }}.4 Conclusão Técnica</h3>
+    <div class="llm-content">
+      {{ render_text(llm_sections.materiais.conclusao_tecnica) }}
+    </div>
+
+  {% elif llm_sections.materiais is string and llm_sections.materiais %}
+    {# Fallback legado: texto corrido #}
+    <div class="llm-content">
+      {{ render_text(llm_sections.materiais) }}
+    </div>
+  {% else %}
+    <p class="text-muted">
+      <em>Seção a ser complementada com dados específicos do projeto.</em>
+    </p>
+  {% endif %}
+</div>
+{% endif %}
+
+
+{# ====================================================================
+   SEÇÃO 3: METODOLOGIA (com tabelas estáticas de critérios e matriz)
+   ==================================================================== #}
+<div class="section">
+  <h2 id="sec-metodo"><span class="section-number">{{ sec_metodo }}.</span> METODOLOGIA APLICADA À AVALIAÇÃO</h2>
+
+  <h3 id="sec-metodo-1">{{ sec_metodo }}.1 Visão Geral do Método</h3>
+  {% if llm_sections.metodologia %}
+    <div class="llm-content">
+      {{ llm_sections.metodologia | format_paragraphs }}
+    </div>
+  {% else %}
+    <p>
+      A avaliação foi conduzida com base na metodologia de identificação de
+      perigos e avaliação de riscos aplicável ao perfil
+      <strong>{{ profile_config.label | default("—") }}</strong>,
+      conforme estabelecido pelas normas técnicas de referência.
+    </p>
+  {% endif %}
+
+  {# ---- Etapas da Avaliação (estática) ---- #}
+  <h3 id="sec-metodo-2">{{ sec_metodo }}.2 Etapas da Avaliação</h3>
+  <p>A avaliação seguiu as seguintes etapas:</p>
+  <ol class="detail-list">
+    <li>Levantamento dos materiais e substâncias presentes na planta, com identificação das propriedades de risco.</li>
+    <li>Identificação das áreas e equipamentos com potencial de formação de
+        {{ profile_config.tipo_atmosfera | default("atmosferas perigosas") }}.</li>
+    <li>Inspeção técnica em campo, avaliando condições de housekeeping, fontes de ignição, sistemas de contenção e práticas operacionais.</li>
+    <li>Avaliação dos sistemas de proteção, detecção e supressão existentes.</li>
+    <li>Classificação do risco por equipamento utilizando a matriz de severidade × probabilidade apresentada acima.</li>
+    <li>Geração de recomendações técnicas priorizadas por nível de risco, fundamentadas nas normas aplicáveis.</li>
+    <li>Elaboração do relatório técnico com inventário completo de riscos.</li>
+  </ol>
+</div>
+
+
+{# ====================================================================
+   SEÇÃO 4: ANÁLISE TÉCNICA INDIVIDUAL — EQUIPAMENTOS
+   ==================================================================== #}
+<div class="section" style="page-break-before: always;">
+  <h2 id="sec-equip">
+    <span class="section-number">{{ sec_equip }}.</span>
+    ANÁLISE TÉCNICA INDIVIDUAL — EQUIPAMENTOS
+  </h2>
+
+  {% for eq in equipments %}
+  <div class="equipment-block" {% if not loop.first %}style="page-break-before: always;"{% endif %}>
+
+    <h3 class="equipment-title" id="sec-equip-{{ eq.index }}">
+      <span class="section-number">{{ sec_equip }}.{{ eq.index }}</span>
+      {{ eq.nome | upper }}
+    </h3>
+
+    {# Dados complementares (local, função) #}
+    {% if eq.local_instalacao or eq.funcao_operacional %}
+    <table class="equipment-info-table">
+      <tbody>
+        {% if eq.local_instalacao %}
+        <tr>
+          <td class="eq-label">Local de instalação:</td>
+          <td>{{ eq.local_instalacao }}</td>
+        </tr>
+        {% endif %}
+        {% if eq.funcao_operacional %}
+        <tr>
+          <td class="eq-label">Função operacional:</td>
+          <td>{{ eq.funcao_operacional }}</td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+    {% endif %}
+
+    {# 4.x.1 Descrição da operação #}
+    <h4>{{ sec_equip }}.{{ eq.index }}.1 Descrição da operação</h4>
+    {% if eq.descricao %}
+      {{ eq.descricao | format_paragraphs }}
+    {% else %}
+      <p class="text-muted">Descrição não informada na planilha.</p>
+    {% endif %}
+
+    {# 4.x.2 Identificação dos perigos #}
+    {% set sub_offset = 2 %}
+    <h4>{{ sec_equip }}.{{ eq.index }}.{{ sub_offset }} Identificação dos perigos</h4>
+    <p>Com base na planilha técnica e na inspeção realizada, foram identificados
+       os seguintes perigos relevantes:</p>
+    {{ render_bullet_list(eq.perigos) }}
+
+    {# 4.x.4 Causas possíveis #}
+    <h4>{{ sec_equip }}.{{ eq.index }}.{{ sub_offset + 1 }} Causas possíveis</h4>
+    {{ render_bullet_list(eq.causas) }}
+
+    {# 4.x.5 Consequências potenciais #}
+    <h4>{{ sec_equip }}.{{ eq.index }}.{{ sub_offset + 2 }} Consequências potenciais</h4>
+    {{ render_bullet_list(eq.consequencias) }}
+
+    {# 4.x.6 Classificação do risco #}
+    <h4>{{ sec_equip }}.{{ eq.index }}.{{ sub_offset + 3 }} Classificação do risco</h4>
+
+    {# Bloco 1 — Situação atual #}
+    <h5>Classificação do Risco — Situação Atual</h5>
+    <table class="risk-table">
+      <tbody>
+        <tr>
+          <td class="risk-label">Categoria de Severidade:</td>
+          <td>
+            <span class="risk-value">{{ eq.severidade | default("N/I") }}</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="risk-label">Categoria da Probabilidade:</td>
+          <td>
+            <span class="risk-value">{{ eq.probabilidade | default(eq.risco | default("N/I")) }}</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="risk-label">Classificação do Risco:</td>
+          <td>
+            <span class="risk-value">{{ eq.classificacao | default(eq.risco | default("N/I")) }}</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    {# Bloco 2 — Pós-implementação (condicional) #}
+    {% if eq.classificacao_residual %}
+    <h5 class="residual-risk-title">Classificação Pós-Implementação das Medidas Preventivas</h5>
+    <table class="risk-table risk-table-residual">
+      <tbody>
+        <tr>
+          <td class="risk-label">Severidade Residual:</td>
+          <td>
+            <span class="risk-value">{{ eq.severidade_residual or "N/I" }}</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="risk-label">Probabilidade Residual:</td>
+          <td>
+            <span class="risk-value">{{ eq.probabilidade_residual or "N/I" }}</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="risk-label">Classificação Residual:</td>
+          <td>
+            <span class="risk-value">{{ eq.classificacao_residual or "N/I" }}</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    {% endif %}
+
+    {# 4.x.7 Medidas preventivas existentes #}
+    <h4>{{ sec_equip }}.{{ eq.index }}.{{ sub_offset + 4 }} Medidas preventivas existentes</h4>
+    {{ render_bullet_list(eq.medidas_existentes) }}
+
+    {# 4.x.8 Recomendações técnicas #}
+    <h4>{{ sec_equip }}.{{ eq.index }}.{{ sub_offset + 5 }} Recomendações técnicas</h4>
+    {% if eq.recomendacoes_tecnicas %}
+      <ol class="detail-list">
+      {% for rec in eq.recomendacoes_tecnicas %}
+        <li value="{{ rec.numero }}">
+          {{ rec.texto | format_paragraphs }}
+        </li>
+      {% endfor %}
+      </ol>
+    {% elif eq.medidas_implementar %}
+      {# Fallback: medidas da planilha quando LLM não gerou recomendações #}
+      <ol class="detail-list">
+      {% for item in eq.medidas_implementar %}
+        {% if item %}
+          <li>{{ item | clean_bullet_text }}</li>
+        {% endif %}
+      {% endfor %}
+      </ol>
+    {% else %}
+      <p class="text-muted">Não informado.</p>
+    {% endif %}
+
+    {# 4.x.9 Justificativas técnicas #}
+    <h4>{{ sec_equip }}.{{ eq.index }}.{{ sub_offset + 6 }} Justificativas técnicas</h4>
+    {% if eq.justificativas_tecnicas %}
+      <ol class="detail-list">
+      {% for jst in eq.justificativas_tecnicas %}
+        <li value="{{ jst.numero }}">{{ jst.texto | format_paragraphs }}</li>
+      {% endfor %}
+      </ol>
+    {% elif eq.observacoes %}
+      {{ render_bullet_list(eq.observacoes) }}
+    {% elif eq.riscos_desc %}
+      <p>Os riscos identificados ({{ eq.riscos_desc | join('; ') }}) justificam
+         as recomendações acima conforme as normas técnicas aplicáveis.</p>
+    {% else %}
+      <p>As recomendações acima são baseadas nos perigos identificados e nas
+         normas técnicas aplicáveis ao perfil de análise.</p>
+    {% endif %}
+
+    {# 4.x.10 Observações extras (complementação) #}
+    {% if eq.observacoes_extras %}
+    <h4>{{ sec_equip }}.{{ eq.index }}.{{ sub_offset + 7 }} Observações complementares</h4>
+    {{ eq.observacoes_extras | format_paragraphs }}
+    {% endif %}
+
+    {# 4.x.11 Registro fotográfico (por último na seção do equipamento) #}
+    {% if eq.images %}
+    <h4>{{ sec_equip }}.{{ eq.index }}.{{ sub_offset + 8 }} Registro fotográfico — {{ eq.nome }}</h4>
+    {% set visible_images = (eq.images | sort(attribute='order_index', reverse=false))[:4] if eq.images and eq.images[0].order_index is defined else eq.images[:4] %}
+    {% set img_count = visible_images | length %}
+    <div class="equipment-images">
+      {% for img in visible_images %}
+        <div class="equipment-photo photo-count-{{ img_count }}">
+          <img src="{{ img.secure_url }}"
+               alt="Imagem do equipamento {{ eq.nome }}" />
+        </div>
+      {% endfor %}
+    </div>
+    <div style="clear: both;"></div>
+    {% endif %}
+
+  </div>
+  {% endfor %}
+
+  <p class="summary-count">
+    Total de equipamentos avaliados: <strong>{{ equipments | length }}</strong>
+  </p>
+
+</div>
+
+
+{# ====================================================================
+   SEÇÃO 5: RECOMENDAÇÕES
+   ==================================================================== #}
+<div class="section" style="page-break-before: always;">
+  <h2 id="sec-recomendacoes">
+    <span class="section-number">{{ sec_recomendacoes }}.</span>
+    RECOMENDAÇÕES
+  </h2>
+
+  <p>
+    A tabela abaixo apresenta as recomendações técnicas por equipamento,
+    organizadas por prioridade de implementação conforme a classificação de risco.
+  </p>
+
+  <table class="consolidated-table">
+    <thead>
+      <tr>
+        <th style="width: 4%;">#</th>
+        <th style="width: 18%;">Equipamento</th>
+        <th style="width: 38%;">Recomendação</th>
+        <th style="width: 15%;">Base Normativa</th>
+        <th style="width: 10%;">Prioridade</th>
+        <th style="width: 15%;">Prazo</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% set rec_ns = namespace(counter=0) %}
+      {% for eq in equipments %}
+        {% if eq.recomendacoes_tecnicas %}
+          {% for rec in eq.recomendacoes_tecnicas %}
+            {% set rec_ns.counter = rec_ns.counter + 1 %}
+            {# Determinar prioridade com base na classificação de risco V3 #}
+            {% set classif_txt = eq.classificacao | default(eq.risco | default("")) %}
+            {% set classif_low = classif_txt | lower %}
+            {% if "muito alt" in classif_low %}
+              {% set prioridade = "Urgente" %}
+              {% set prazo = "Imediato (0–30 dias)" %}
+              {% set pclass = "priority-urgente" %}
+            {% elif "alt" in classif_low %}
+              {% set prioridade = "Alta" %}
+              {% set prazo = "Curto prazo (30–90 dias)" %}
+              {% set pclass = "priority-alta" %}
+            {% elif "médi" in classif_low or "medi" in classif_low %}
+              {% set prioridade = "Média" %}
+              {% set prazo = "Programado (90–180 dias)" %}
+              {% set pclass = "priority-media" %}
+            {% else %}
+              {% set prioridade = "Baixa" %}
+              {% set prazo = "Monitoramento contínuo" %}
+              {% set pclass = "priority-baixa" %}
+            {% endif %}
+            <tr>
+              <td>{{ rec_ns.counter }}</td>
+              <td>{{ eq.nome }}</td>
+              <td>{{ rec.texto | format_paragraphs }}</td>
+              <td>{{ rec.norma_referencia | default("—") }}</td>
+              <td><span class="{{ pclass }}">{{ prioridade }}</span></td>
+              <td>{{ prazo }}</td>
+            </tr>
+          {% endfor %}
+        {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p class="text-muted mt-1">
+    Total de recomendações: <strong>{{ rec_ns.counter }}</strong>
+  </p>
+</div>
+
+
+{# ====================================================================
+   SEÇÃO 6: CLASSIFICAÇÃO DE RISCO GERAL
+   ==================================================================== #}
+<div class="section">
+  <h2 id="sec-classif">
+    <span class="section-number">{{ sec_classif }}.</span>
+    CLASSIFICAÇÃO DE RISCO GERAL
+  </h2>
+
+  <h3>{{ sec_classif }}.1 Distribuição por Nível de Risco</h3>
+
+  {# Contar equipamentos por nível de risco (vocabulário V3: Baixo/Médio/Alto/Muito Alto) #}
+  {% set risk_counts = namespace(muito_alto=0, alto=0, medio=0, baixo=0) %}
+  {% for eq in equipments %}
+    {% set r = (eq.classificacao | default(eq.risco | default(""))) | lower %}
+    {% if "muito alt" in r %}{% set risk_counts.muito_alto = risk_counts.muito_alto + 1 %}
+    {% elif "alt" in r %}{% set risk_counts.alto = risk_counts.alto + 1 %}
+    {% elif "médi" in r or "medi" in r %}{% set risk_counts.medio = risk_counts.medio + 1 %}
+    {% else %}{% set risk_counts.baixo = risk_counts.baixo + 1 %}
+    {% endif %}
+  {% endfor %}
+
+  <div class="risk-distribution">
+    <table>
+      <thead>
+        <tr>
+          <th>Nível de Risco</th>
+          <th>Quantidade</th>
+          <th>Percentual</th>
+          <th>Ação Requerida</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if risk_counts.muito_alto > 0 %}
+        <tr>
+          <td><span class="risk-badge" style="background-color: #dc3545;">Muito Alto</span></td>
+          <td>{{ risk_counts.muito_alto }}</td>
+          <td>{{ ((risk_counts.muito_alto / equipments|length) * 100) | round(0) | int }}%</td>
+          <td>Intervenção imediata obrigatória (0–30 dias)</td>
+        </tr>
+        {% endif %}
+        {% if risk_counts.alto > 0 %}
+        <tr>
+          <td><span class="risk-badge" style="background-color: #fd7e14;">Alto</span></td>
+          <td>{{ risk_counts.alto }}</td>
+          <td>{{ ((risk_counts.alto / equipments|length) * 100) | round(0) | int }}%</td>
+          <td>Ação em curto prazo (30–90 dias)</td>
+        </tr>
+        {% endif %}
+        {% if risk_counts.medio > 0 %}
+        <tr>
+          <td><span class="risk-badge" style="background-color: #ffc107; color: #333;">Médio</span></td>
+          <td>{{ risk_counts.medio }}</td>
+          <td>{{ ((risk_counts.medio / equipments|length) * 100) | round(0) | int }}%</td>
+          <td>Ação programada (90–180 dias)</td>
+        </tr>
+        {% endif %}
+        {% if risk_counts.baixo > 0 %}
+        <tr>
+          <td><span class="risk-badge" style="background-color: #28a745;">Baixo</span></td>
+          <td>{{ risk_counts.baixo }}</td>
+          <td>{{ ((risk_counts.baixo / equipments|length) * 100) | round(0) | int }}%</td>
+          <td>Monitoramento contínuo</td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  {# Distribuição Pós-Implementação (V3) #}
+  {% set has_residual = [] %}
+  {% for eq in equipments %}
+    {% if eq.classificacao_residual %}{% set _ = has_residual.append(1) %}{% endif %}
+  {% endfor %}
+  {% if has_residual | length > 0 %}
+  <h3>{{ sec_classif }}.1.1 Distribuição Pós-Implementação das Medidas Preventivas</h3>
+
+  {% set res_counts = namespace(muito_alto=0, alto=0, medio=0, baixo=0) %}
+  {% for eq in equipments %}
+    {% if eq.classificacao_residual %}
+      {% set rr = eq.classificacao_residual | lower %}
+      {% if "muito alt" in rr %}{% set res_counts.muito_alto = res_counts.muito_alto + 1 %}
+      {% elif "alt" in rr %}{% set res_counts.alto = res_counts.alto + 1 %}
+      {% elif "médi" in rr or "medi" in rr %}{% set res_counts.medio = res_counts.medio + 1 %}
+      {% else %}{% set res_counts.baixo = res_counts.baixo + 1 %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+
+  <div class="risk-distribution">
+    <table>
+      <thead>
+        <tr>
+          <th>Nível de Risco Residual</th>
+          <th>Quantidade</th>
+          <th>Percentual</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% set total_residual = res_counts.muito_alto + res_counts.alto + res_counts.medio + res_counts.baixo %}
+        {% if res_counts.muito_alto > 0 %}
+        <tr>
+          <td><span class="risk-badge" style="background-color: #dc3545;">Muito Alto</span></td>
+          <td>{{ res_counts.muito_alto }}</td>
+          <td>{{ ((res_counts.muito_alto / total_residual) * 100) | round(0) | int }}%</td>
+        </tr>
+        {% endif %}
+        {% if res_counts.alto > 0 %}
+        <tr>
+          <td><span class="risk-badge" style="background-color: #fd7e14;">Alto</span></td>
+          <td>{{ res_counts.alto }}</td>
+          <td>{{ ((res_counts.alto / total_residual) * 100) | round(0) | int }}%</td>
+        </tr>
+        {% endif %}
+        {% if res_counts.medio > 0 %}
+        <tr>
+          <td><span class="risk-badge" style="background-color: #ffc107; color: #333;">Médio</span></td>
+          <td>{{ res_counts.medio }}</td>
+          <td>{{ ((res_counts.medio / total_residual) * 100) | round(0) | int }}%</td>
+        </tr>
+        {% endif %}
+        {% if res_counts.baixo > 0 %}
+        <tr>
+          <td><span class="risk-badge" style="background-color: #28a745;">Baixo</span></td>
+          <td>{{ res_counts.baixo }}</td>
+          <td>{{ ((res_counts.baixo / total_residual) * 100) | round(0) | int }}%</td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  <h3>{{ sec_classif }}.2 Resumo</h3>
+
+  {% if llm_sections.classificacao_narrativa %}
+    <div class="llm-content">
+      {{ render_text(llm_sections.classificacao_narrativa) }}
+    </div>
+  {% else %}
+    <p>
+      Dos <strong>{{ equipments | length }}</strong> equipamentos avaliados na unidade
+      <strong>{{ metadata.site | default("—") }}</strong>,
+      {% if risk_counts.muito_alto > 0 %}
+        <strong>{{ risk_counts.muito_alto }}</strong> apresentam risco
+        <strong>Muito Alto</strong> e requerem intervenção imediata{{ ", " if risk_counts.alto > 0 else "." }}
+      {% endif %}
+      {% if risk_counts.alto > 0 %}
+        <strong>{{ risk_counts.alto }}</strong> apresentam risco
+        <strong>Alto</strong> com ação requerida em até 90 dias{{ ", " if risk_counts.medio > 0 else "." }}
+      {% endif %}
+      {% if risk_counts.medio > 0 %}
+        e <strong>{{ risk_counts.medio }}</strong>
+        apresentam risco <strong>Médio</strong> com ação programada.
+      {% endif %}
+    </p>
+    <p>
+      Recomenda-se a implementação prioritária das medidas para os equipamentos
+      classificados como risco Muito Alto, seguidos dos equipamentos com risco
+      Alto, conforme cronograma detalhado na seção de Recomendações.
+    </p>
+  {% endif %}
+</div>
+
+
+{# ====================================================================
+   SEÇÃO 7: CONCLUSÃO
+   ==================================================================== #}
+<div class="section" style="page-break-before: always;">
+  <h2 id="sec-conclusao">
+    <span class="section-number">{{ sec_conclusao }}.</span>
+    CONCLUSÃO
+  </h2>
+
+  {% if llm_sections.conclusao %}
+    <div class="llm-content">
+      {{ render_text(llm_sections.conclusao) }}
+    </div>
+  {% else %}
+    <p>
+      A avaliação identificou <strong>{{ equipments | length }}</strong>
+      equipamentos com riscos associados na unidade
+      <strong>{{ metadata.site | default("—") }}</strong>.
+      As recomendações devem ser implementadas conforme a prioridade atribuída,
+      priorizando-se ações sobre riscos classificados com severidade e
+      probabilidade mais elevadas.
+    </p>
+    <p>
+      Reforça-se a urgência da adoção das recomendações propostas em cada item,
+      bem como a criação de um cronograma de implementação com responsabilidades
+      definidas, garantindo um ambiente mais seguro e em conformidade com as
+      normas vigentes.
+    </p>
+  {% endif %}
+</div>
+
+
+{# ====================================================================
+   SEÇÃO 8: REFERÊNCIAS NORMATIVAS (categorizadas)
+   ==================================================================== #}
+<div class="section references-section">
+  <h2 id="sec-refs">
+    <span class="section-number">{{ sec_refs }}.</span>
+    REFERÊNCIAS NORMATIVAS
+  </h2>
+
+  {# Separar normas por categoria #}
+  {% set normas = profile_config.normas_principais | default([]) %}
+
+  {% set nacionais = [] %}
+  {% set internacionais = [] %}
+  {% set regulamentadoras = [] %}
+  {% for norma in normas %}
+    {% if norma.startswith('ABNT') %}
+      {% if nacionais.append(norma) %}{% endif %}
+    {% elif norma.startswith('NR-') or norma.startswith('NR ') %}
+      {% if regulamentadoras.append(norma) %}{% endif %}
+    {% else %}
+      {% if internacionais.append(norma) %}{% endif %}
+    {% endif %}
+  {% endfor %}
+
+  {% if nacionais %}
+  <h3>{{ sec_refs }}.1 Normas Nacionais (ABNT)</h3>
+  <ul class="references-list">
+    {% for norma in nacionais %}
+      <li>{{ norma }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if internacionais %}
+  <h3>{{ sec_refs }}.2 Normas Internacionais (NFPA / IEC)</h3>
+  <ul class="references-list">
+    {% for norma in internacionais %}
+      <li>{{ norma }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if regulamentadoras %}
+  <h3>{{ sec_refs }}.3 Normas Regulamentadoras (NR)</h3>
+  <ul class="references-list">
+    {% for norma in regulamentadoras %}
+      <li>{{ norma }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+
+
+{# ====================================================================
+   SEÇÃO 9: ENCERRAMENTO
+   ==================================================================== #}
+<div class="section encerramento" style="page-break-before: always;">
+  <h2 id="sec-encerramento">
+    <span class="section-number">{{ sec_encerramento }}.</span>
+    ENCERRAMENTO
+  </h2>
+
+  <p>
+    Este relatório foi elaborado com base em visita técnica, coleta de dados operacionais,
+    relatórios complementares, classificação de áreas, normas técnicas nacionais e internacionais, e
+    melhores práticas de engenharia.
+  </p>
+
+  <p>A Konis permanece à disposição para:</p>
+  <ul>
+    <li>Suporte na implantação técnica das recomendações;</li>
+    <li>Treinamento de operadores e manutenção;</li>
+    <li>Projetos de engenharia de proteção contraexplosões;</li>
+    <li>Auditoria e atualização do DHA.</li>
+  </ul>
+
+  <blockquote class="encerramento-quote">
+    <p>
+      "Proteger vidas, ativos e processos industriais começa com decisões
+      fundamentadas em dados.
+    </p>
+    <p>
+      Este relatório vai além do atendimento às normas, ele consolida o compromisso
+      com uma cultura de segurança sólida, onde cada grama de poeira é tratada com o
+      respeito que sua energia potencial exige. Segurança não é opcional, é essencial."
+    </p>
+  </blockquote>
+
+  <p class="encerramento-city">São Paulo, {{ mes_ano }}.</p>
+
+  <div class="encerramento-contact">
+    <img src="assinatura.png" class="encerramento-assinatura" alt="Assinatura">
+    <p class="contact-name">{{ metadata.assinatura_nome | default(profile_config.assinatura_nome | default("Flávio Cavalcante")) }}</p>
+    <p class="contact-role">{{ metadata.assinatura_cargo | default(profile_config.assinatura_cargo | default("Gerente técnico")) }}</p>
+    {% if metadata.assinatura_registro or profile_config.assinatura_registro %}
+    <p class="contact-registro">{{ metadata.assinatura_registro | default(profile_config.assinatura_registro) }}</p>
+    {% endif %}
+    <br>
+    <p class="contact-phone">M {{ metadata.assinatura_celular | default(profile_config.assinatura_celular | default("+55 (11) 94572 0000")) }}</p>
+    <p class="contact-phone">T {{ metadata.assinatura_telefone | default(profile_config.assinatura_telefone | default("+55 (11) 3046 3648")) }}</p>
+    <p class="contact-link"><a href="mailto:{{ metadata.assinatura_email | default(profile_config.assinatura_email | default('flavio.cavalcante@konis.com.br')) }}">{{ metadata.assinatura_email | default(profile_config.assinatura_email | default("flavio.cavalcante@konis.com.br")) }}</a></p>
+    <p class="contact-link"><a href="https://www.konis.com.br" target="_blank">www.konis.com.br</a></p>
+
+    <img src="konis_logo.png" class="encerramento-logo" alt="Konis - Segurança é essencial">
+  </div>
+</div>
+
+
+{# ====================================================================
+   APÊNDICE A — Itens de risco avaliados
+   ==================================================================== #}
+{% if rows %}
+<div class="section annex-landscape">
+  <h2 id="sec-anexo">APÊNDICE A — Itens de risco avaliados na unidade {{ metadata.site | default("—") }}</h2>
+
+  <p class="text-muted">
+    Tabela com todos os itens de risco avaliados na unidade {{ metadata.site | default("—") }}.
+  </p>
+
+  <table class="inventory-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Equipamento</th>
+        <th>Perigo</th>
+        <th>Causas</th>
+        <th>Consequências</th>
+        <th>Severidade</th>
+        <th>Probabilidade</th>
+        <th>Classificação</th>
+        <th>Medidas Existentes</th>
+        <th>Medidas a Implementar</th>
+        <th>Base Normativa</th>
+        <th>Prazo</th>
+        <th>Sev. Residual</th>
+        <th>Prob. Residual</th>
+        <th>Class. Residual</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ row.equipamento | default("—") }}</td>
+        <td>{{ row.perigo | default("—") }}</td>
+        <td>{{ row.causas | default("—") }}</td>
+        <td>{{ row.consequencias | default("—") }}</td>
+        <td>
+          {% set sev = row.categoria_severidade | default("—") %}
+          {{ risk_badge(sev, small=True) }}
+        </td>
+        <td>
+          {{ risk_badge(row.categoria_probabilidade | default(row.categoria_risco | default("—")), small=True) }}
+        </td>
+        <td>
+          {% set risk = row.classificacao_risco | default(row.categoria_risco | default("—")) %}
+          {{ risk_badge(risk, small=True) }}
+        </td>
+        <td>{{ row.medidas_existentes | default("—") }}</td>
+        <td>{{ row.medidas_implementar | default("—") }}</td>
+        <td>{{ normas_por_equipamento.get(row.equipamento) or "—" }}</td>
+        <td>
+          {% set classif_anexo = (row.classificacao_risco | default(row.categoria_risco | default(""))) | lower %}
+          {% if "muito alt" in classif_anexo %}Imediato (0–30 dias)
+          {% elif "alt" in classif_anexo %}Curto prazo (30–90 dias)
+          {% elif "médi" in classif_anexo or "medi" in classif_anexo %}Programado (90–180 dias)
+          {% elif "baix" in classif_anexo %}Monitoramento contínuo
+          {% else %}—{% endif %}
+        </td>
+        <td>
+          {% set sevr = row.categoria_severidade_2 | default("—") %}
+          {{ risk_badge(sevr, small=True) }}
+        </td>
+        <td>
+          {{ risk_badge(row.categoria_probabilidade_2 | default("—"), small=True) }}
+        </td>
+        <td>
+          {% set riskr = row.classificacao_risco_2 | default("—") %}
+          {{ risk_badge(riskr, small=True) }}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p class="text-muted mt-1">
+    Total de itens: <strong>{{ rows | length }}</strong>
+  </p>
+</div>
+{% endif %}
+
+</body>
+</html>
