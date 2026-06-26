@@ -26,5 +26,5 @@ Thumbs.db
 .vscode/
 .idea/
 
-automacadha/lib/generated/prisma/
-PythonServiceAuto/output/
+frontend/lib/generated/prisma/
+backend/output/

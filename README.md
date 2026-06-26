@@ -1,12 +1,12 @@
 # Automacao DHA Deploy
 
-Monorepo de deploy com o frontend Next.js em `automacadha/` e o backend FastAPI em `PythonServiceAuto/`.
+Monorepo de deploy com o frontend Next.js em `frontend/` e o backend FastAPI em `backend/`.
 
 ## Estrutura
 
 ```txt
-automacadha/          # Frontend Next.js
-PythonServiceAuto/    # Backend FastAPI
+frontend/             # Frontend Next.js
+backend/              # Backend FastAPI
 docker-compose.yml    # Compose para Dokploy/producao
 docker-compose.local.yml
 .env.example
