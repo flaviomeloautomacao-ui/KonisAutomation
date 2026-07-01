@@ -8,6 +8,11 @@
 import type { NextAuthConfig } from "next-auth";
 
 export const authConfig: NextAuthConfig = {
+  // Self-hosting atrás de proxy (Dokploy/Traefik) + NODE_ENV=production:
+  // o Auth.js v5 exige confiar explicitamente no Host header, senão lança
+  // UntrustedHost. Também pode ser ligado via env AUTH_TRUST_HOST=true.
+  trustHost: true,
+
   pages: {
     signIn: "/login",
   },
