@@ -44,6 +44,11 @@ services:
       PYTHON_SERVICE_URL: http://backend:8000
       SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
       SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      # Seed de admin idempotente rodado no start do container.
+      # Cria o admin só se ainda não existir; deixe em branco para desativar.
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
+      SEED_ADMIN_NAME: ${SEED_ADMIN_NAME:-Administrador}
     depends_on:
       backend:
         condition: service_started

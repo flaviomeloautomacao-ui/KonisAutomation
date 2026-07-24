@@ -46,7 +46,12 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/next.config.ts ./next.config.ts
 COPY --from=builder /app/lib/generated ./lib/generated
+# Seed de admin (idempotente) rodado no start — usa apenas pg + bcryptjs (prod deps).
+COPY --from=builder /app/scripts/seed-admin.mjs ./scripts/seed-admin.mjs
 
 EXPOSE 3000
 
-CMD ["npm", "run", "start"]
+# Roda o seed de admin e, em seguida, sobe o servidor. O seed é no-op quando não
+# configurado e nunca derruba o start (sempre sai com 0). `exec` faz o next start
+# assumir o PID para receber os sinais de shutdown.
+CMD ["sh", "-c", "node scripts/seed-admin.mjs; exec npm run start"]
